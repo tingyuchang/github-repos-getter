@@ -1,0 +1,18 @@
+DB:
+  Host: "localhost"
+  Port: "3306"
+  Database: "DATABASE"
+  Username: "USERNAME"
+  Password: "PASSWORD"
+  Driver: "mysql"
+
+Server:
+  RunMode: "debug"
+  Port: 80
+  Timeout: 60
+App:
+  Version: 1.0
+  PageSize: 20
+  JwtSecret: "SECRET"
+  GitHubToken: "TOKEN"
+
