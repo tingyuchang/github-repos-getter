@@ -6,6 +6,7 @@ import (
 	"github-repos-getter/model"
 	"io/ioutil"
 	"net/http"
+	"github-repos-getter/setting"
 )
 
 const URL = "https://api.github.com"
@@ -17,15 +18,14 @@ func init() {
 }
 
 func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
-	url_path := fmt.Sprintf("%v/search/repositories?q=%v&sort=%v&page=%v&per_page=%v", URL, q, sort, page, perPage)
-	req, err := http.NewRequest("GET", url_path, nil)
+	urlPath := fmt.Sprintf("%v/search/repositories?q=%v&sort=%v&page=%v&per_page=%v", URL, q, sort, page, perPage)
+	req, err := http.NewRequest("GET", urlPath, nil)
 
 	if err != nil {
 		return model.Response{}, err
 	}
 
-	req.Header.Add("Accept", `application/vnd.github.v3+json`)
-	req.Header.Add("Authorization", `token c2af74899ca0c6488a6f784987e955dc207b02fd`)
+	addAuth(req)
 	resp, err := client.Do(req)
 	robots, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -44,15 +44,14 @@ func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
 }
 
 func GetLimitation() error {
-	url_path := fmt.Sprintf("%v/rate_limit", URL)
-	fmt.Println(url_path)
-	req, err := http.NewRequest("GET", url_path, nil)
+	urlPath := fmt.Sprintf("%v/rate_limit", URL)
+	fmt.Println(urlPath)
+	req, err := http.NewRequest("GET", urlPath, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add("Accept", `application/vnd.github.v3+json`)
-	req.Header.Add("Authorization", `token c2af74899ca0c6488a6f784987e955dc207b02fd`)
+	addAuth(req)
 	resp, err := client.Do(req)
 	robots, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -69,4 +68,9 @@ func GetLimitation() error {
 	fmt.Println(data)
 
 	return nil
+}
+
+func addAuth(req *http.Request) {
+	req.Header.Add("Accept", `application/vnd.github.v3+json`)
+	req.Header.Add("Authorization", fmt.Sprintf("token %v", setting.Config.APP.GitHubToken))
 }
