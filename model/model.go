@@ -70,7 +70,13 @@ func InsertRepo(repo Repo) error {
 
 	defer stmt.Close()
 
-	if _, err := stmt.Exec(repo.Id, utils.DivideString(repo.Name, 100), utils.DivideString(repo.FullName, 200), repo.Url,utils.DivideString(repo.Description, 500), repo.Language, repo.StargazersCount, time.Now()); err != nil {
+	if _, err := stmt.Exec(repo.Id,
+		utils.DivideString(repo.Name, 100),
+		utils.DivideString(repo.FullName, 200),
+		repo.Url,utils.DivideString(repo.Description, 500),
+		repo.Language,
+		repo.StargazersCount,
+		time.Now()); err != nil {
 		return err
 	}
 
@@ -85,7 +91,14 @@ func UpdateRepo(repo Repo) error {
 
 	defer stmt.Close()
 
-	if _, err := stmt.Exec(repo.Id, utils.DivideString(repo.Name, 100), utils.DivideString(repo.FullName, 200), repo.Url,utils.DivideString(repo.Description, 500), repo.Language, repo.StargazersCount, time.Now(), repo.Id); err != nil {
+	if _, err := stmt.Exec(repo.Id,
+		utils.DivideString(repo.Name, 100),
+		utils.DivideString(repo.FullName, 200),
+		repo.Url,utils.DivideString(repo.Description, 500),
+		repo.Language,
+		repo.StargazersCount,
+		time.Now(),
+		repo.Id); err != nil {
 		return err
 	}
 
