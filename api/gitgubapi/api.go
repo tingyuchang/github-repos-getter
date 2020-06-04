@@ -28,7 +28,7 @@ func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
 	addAuth(req)
 	resp, err := client.Do(req)
 	robots, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if err != nil {
 		return model.Response{}, err
 	}
@@ -54,7 +54,7 @@ func GetLimitation() error {
 	addAuth(req)
 	resp, err := client.Do(req)
 	robots, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if err != nil {
 		return err
 	}
