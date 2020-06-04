@@ -16,7 +16,6 @@ var err error
 
 func Setup() {
 	driverName, dataSourceName := loadDBConfig()
-	fmt.Println(dataSourceName)
 	db, err = sql.Open(driverName, dataSourceName)
 
 	if err != nil {

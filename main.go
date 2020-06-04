@@ -21,19 +21,21 @@ func init() {
 func main() {
 	defer model.CloseDB()
 
-	// exec()
-	exec2()
+	exec("language:PHP")
+	exec2("language:Go")
 }
 
-func exec() {
+func exec(q string) {
+	start := time.Now()
 	var repos []model.Repo
 	page := 10
 	ch := make(chan model.Response, page)
 	for i := 0; i < page; i++ {
+		i := i+1
 		time.Sleep(400 * time.Millisecond)
 		wg.Add(1)
 		exit := func(){wg.Done()}
-		go githubapi.GetGithubRepos("language:PHP", "starts", i, 2, ch, exit )
+		go githubapi.GetGithubRepos(q, "starts", i, 20, ch, exit )
 	}
 	go func() {
 		defer close(ch)
@@ -59,19 +61,22 @@ func exec() {
 			}
 		}
 	}
+
+	fmt.Println(time.Since(start))
 }
 
-func exec2() {
+func exec2(q string) {
+	start := time.Now()
 	var repos []model.Repo
 	page := 10
 	mu := sync.Mutex{}
 	wg.Add(page)
 	for i := 0; i < page; i++ {
-		i := i
+		i := i+1
 		time.Sleep(400 * time.Millisecond)
 		go func() {
 			defer wg.Done()
-			response, err := githubapi.GetGithubRepos2("language:JavaScript", "starts", i, 2)
+			response, err := githubapi.GetGithubRepos2(q, "starts", i, 1)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -85,7 +90,21 @@ func exec2() {
 
 	wg.Wait()
 
-	fmt.Println(len(repos))
+	for _,v := range repos {
+		err := model.InsertRepo(v)
+		if err != nil {
+			if existRepo, err := model.GetRepo(strconv.Itoa(v.Id)); err == nil && existRepo.Id !=  0 {
+				err = model.UpdateRepo(v)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else  {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	fmt.Println(time.Since(start))
 }
 
 
