@@ -17,7 +17,34 @@ func init() {
 	client = &http.Client{}
 }
 
-func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
+func GetGithubRepos(q,sort string, page, perPage int, ch chan <- model.Response, onExit func())  {
+	defer onExit()
+	urlPath := fmt.Sprintf("%v/search/repositories?q=%v&sort=%v&page=%v&per_page=%v", URL, q, sort, page, perPage)
+	req, err := http.NewRequest("GET", urlPath, nil)
+
+	if err != nil {
+		ch <- model.Response{Error: err}
+	}
+
+	addAuth(req)
+	resp, err := client.Do(req)
+	robots, err := ioutil.ReadAll(resp.Body)
+
+	_ = resp.Body.Close()
+	if err != nil {
+		ch <- model.Response{Error: err}
+	}
+
+	var response model.Response
+
+	err = json.Unmarshal(robots, &response)
+	if err != nil {
+		ch <- model.Response{Error: err}
+	}
+	ch <- response
+}
+
+func GetGithubRepos2(q,sort string, page, perPage int) (model.Response, error)  {
 	urlPath := fmt.Sprintf("%v/search/repositories?q=%v&sort=%v&page=%v&per_page=%v", URL, q, sort, page, perPage)
 	req, err := http.NewRequest("GET", urlPath, nil)
 
@@ -28,6 +55,7 @@ func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
 	addAuth(req)
 	resp, err := client.Do(req)
 	robots, err := ioutil.ReadAll(resp.Body)
+
 	_ = resp.Body.Close()
 	if err != nil {
 		return model.Response{}, err
@@ -39,7 +67,6 @@ func GetGithubRepos(q,sort string, page, perPage int) (model.Response, error) {
 	if err != nil {
 		return model.Response{}, err
 	}
-
 	return response, nil
 }
 

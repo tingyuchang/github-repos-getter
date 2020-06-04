@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 var wg sync.WaitGroup
 
 func init() {
@@ -21,30 +20,33 @@ func init() {
 
 func main() {
 	defer model.CloseDB()
+
+	// exec()
+	exec2()
 }
 
 func exec() {
-	var datas []model.Repo
-	page := 2
-
-	wg.Add(page)
+	var repos []model.Repo
+	page := 10
+	ch := make(chan model.Response, page)
 	for i := 0; i < page; i++ {
-		time.Sleep(1000 * time.Millisecond)
-		go func() {
-			defer wg.Done()
-			response, err := githubapi.GetGithubRepos("language:JavaScript", "starts", i, 100)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if len(response.Items) > 0 {
-				datas = append(datas, response.Items...)
-			}
-		}()
+		time.Sleep(400 * time.Millisecond)
+		wg.Add(1)
+		exit := func(){wg.Done()}
+		go githubapi.GetGithubRepos("language:PHP", "starts", i, 2, ch, exit )
+	}
+	go func() {
+		defer close(ch)
+		wg.Wait()
+	}()
+
+	for response := range ch {
+		if len(response.Items) > 0 {
+			repos = append(repos, response.Items...)
+		}
 	}
 
-	wg.Wait()
-
-	for _,v := range datas {
+	for _,v := range repos {
 		err := model.InsertRepo(v)
 		if err != nil {
 			if existRepo, err := model.GetRepo(strconv.Itoa(v.Id)); err == nil && existRepo.Id !=  0 {
@@ -57,6 +59,33 @@ func exec() {
 			}
 		}
 	}
+}
+
+func exec2() {
+	var repos []model.Repo
+	page := 10
+	mu := sync.Mutex{}
+	wg.Add(page)
+	for i := 0; i < page; i++ {
+		i := i
+		time.Sleep(400 * time.Millisecond)
+		go func() {
+			defer wg.Done()
+			response, err := githubapi.GetGithubRepos2("language:JavaScript", "starts", i, 2)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if len(response.Items) > 0 {
+				mu.Lock()
+				repos = append(repos, response.Items...)
+				mu.Unlock()
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	fmt.Println(len(repos))
 }
 
 
